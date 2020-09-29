@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Welcome to Firebase Hosting</title>
+
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/7.11.0/firebase-app.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/7.11.0/firebase-auth.js"></script>
+    <script defer src="/__/firebase/7.11.0/firebase-database.js"></script>
+    <script defer src="/__/firebase/7.11.0/firebase-messaging.js"></script>
+    <script defer src="/__/firebase/7.11.0/firebase-storage.js"></script>
+    <!-- initialize the SDK after all desired features are loaded -->
+	
+	<script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-database.js"></script>
+    <script defer src="/__/firebase/init.js"></script>
+
+    <style media="screen">
+	
+	.dropbtn {
+	display: block; font-size: 15px; text-align: center; text-decoration: none; color: black; border-radius: 4px; 
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+  float:left;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  z-index: 1;
+}
+
+.dropdown-content a {
+  color: black;
+  text-decoration: none;
+}
+
+.searchbar_bttn {
+	float:left;
+}
+<!--
+.dropdown-content a:hover {background-color: #ddd;}
+
+.dropdown:hover .dropdown-content {display: block;}
+
+.dropdown:hover .dropbtn {background-color: #3e8e41;}
+	
+	-->
+      body { background: #ECEFF1; font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
+      #message { max-width: 900px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
+      #message h2 { color: #FF6347; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
+      #message h1 {font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
+      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
+      #message a { display: block; font-size: 15px; text-align: center; background: #ededed; text-decoration: none; color: black; padding: 16px; border-radius: 4px; }
+	  #message tr { display: block; font-size: 15px; background: #ffffff; padding: 8px; border-radius: 2px; border: 1px solid black; max-width: 880px;}
+	  #message td { display: inline-block; font-size: 15px; background: #ffffff; text-decoration: none; padding: 16px; border-radius: 4px; border: 1px solid black;}
+	  #message input { font-size: 15px; background: #ffffff; text-decoration: none; padding: 6px; border-radius: 4px; border: 1px solid black;}
+	  #message button { font-size: 15px; background: #228B22;color: white; text-decoration: none; padding: 6px; border-radius: 4px; border: 1px solid black;}
+      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
+      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
+      @media (max-width: 600px) {
+        body, #message { margin-top: 0; background: white; box-shadow: none; }
+        body { border-top: 16px solid #ffa100; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="message">
+      <h1>Database Explorer</h1>
+	  <div class="dropdown">
+		  <button id = "dbselection" style="background:white;color: black;min-width: 130px;"class="dropbtn" >Select Database</button>
+		  <div class="dropdown-content">
+			<a id="wdb" href="#">World Database</a>
+			<a id="idb" href="#">Northwind Database</a>
+			<a id="sdb" href="#">Sakilla Database</a>
+		</div>
+	</div>
+	<div>
+		<div id="searchform" >
+		  <input id="searchbar1" type="text" placeholder="Search.." name="search" class = "searchbar_bttn"><button id="searchbtn" class = "searchbar_bttn">Search</button>
+		</div>
+	</div>
+	<div>
+	<table id = "records" style="width:100%">
+</table>
+</div>
+</div>
+      
+    </div>
+
+    <script>
+var curdb = null
+	document.getElementById("wdb").addEventListener("click", function(event){
+	curdb = "world"
+        loadtable("World")
+		
+     });
+	document.getElementById("idb").addEventListener("click", function(event){
+        curdb = "northwind"
+		loadtable("Northwind")
+		
+     });
+	document.getElementById("sdb").addEventListener("click", function(event){
+        curdb = "Sakilla"
+		loadtable("Sakilla")
+		
+     });
+	 
+	 var searchbutton1 = document.getElementById("searchbtn");
+	//form.action = ""
+	searchbutton1.addEventListener("click", function () {
+	
+  var xhttp = new XMLHttpRequest();
+
+  xhttp.onreadystatechange = function() {
+  console.log("ready")
+  console.log(this.status)
+	if (this.status == 404) {
+	alert("Please enter keyworkds to search");
+	return
+	}
+    if (this.readyState == 4 && this.status == 200) {
+
+		content = ""
+		/////////////////////////////////////////////////////////////////
+		
+		respobj = JSON.parse(this.responseText);
+		//console.log("response object created")
+		if(respobj.hasOwnProperty('errorCode')){
+		alert("Keywords not found")
+		return 
+}
+		for(var i = 0; i < respobj.length; i++) { // rows
+					
+					var val = respobj[i]; //row
+					
+					content +='<tr>';
+					for(var propName1 in val) {
+						
+						//console.log(data.key)
+				var table1 = val["Table"]
+						if(propName1 == "Table") {
+							continue
+						}
+						cols = val[propName1]
+								content += '<td class=\"'+propName1+'\" data-table=\"' + table1 + '\" >' + JSON.stringify(cols) + '</td>';
+						
+					}	
+				}
+				content += "</tr>"
+									document.getElementById("records").innerHTML = content; 
+									
+		/////////////////////////////////////////////////////////////////
+		fkey("world", "fkrelation")
+			fkey("world", "pkrelation")
+			fkey("northwind", "fkrelation")
+			fkey("northwind", "pkrelation")
+			fkey("Sakilla", "fkrelation")
+			fkey("Sakilla", "pkrelation")
+    } 
+  }; 
+  searchphrase = document.getElementById("searchbar1").value
+  if (searchphrase == "") {
+	alert("Please enter search phrase");
+	return
+  }
+  if(curdb==null){
+  alert("Please select a database")
+  } else {
+  url = "http://127.0.0.1:5000/getData?word="+searchphrase+"&db="+curdb
+  console.log(url)
+  xhttp.open("GET", url, true);
+  console.log("sending request")
+  xhttp.send();
+  }
+  
+});
+	 
+
+	function searchkeyword(event) {
+		//alert(event.target.innerHTML +  curdb);
+		var content1 = '';
+		oskey = event.target.innerHTML;
+		targettable = event.target.getAttribute('data-table')
+		
+		skey = oskey.replace(/['"]+/g, '')
+		skey = skey.toLowerCase()
+		
+		relationcontent = ""
+		
+		database.ref().child(curdb).child("index/" + skey).once('value', function(snapshot){
+        if(snapshot.exists()){
+            
+            snapshot.forEach(function(data){
+				
+				var dv = data.val();
+				
+				valid = false
+				pkey = null
+				for(var propName in dv) { // row
+					
+						if(propName == "COLUMN" || propName == "TABLE"){
+						continue;
+					}
+					var val = dv[propName]; //row
+					
+					table = dv["TABLE"]
+					table = table.replace(/['"]+/g, '')
+					
+					kmatch = false
+					
+					for(var propName1 in val) {
+						v1 = val[propName1]
+						v1 = v1.toLowerCase()
+						v1 = v1.replace(/['"]+/g, '')
+						if(v1 == skey){
+							kmatch = true
+							pkeyname = propName1
+							break
+						}
+					}
+					
+					if(targettable == table){
+						continue
+					}
+					if(kmatch){
+						
+						valid = true
+						
+						pkeyname = pkeyname.replace(/['"]+/g, '')
+						pkeyval = oskey
+						pkeyval = pkeyval.replace(/['"]+/g, '')
+						document.getElementById("records").innerHTML = "";
+						
+						database.ref().child(curdb).child(table).orderByChild(pkeyname).equalTo(pkeyval).once('value', function(snapshot){
+							
+							table = snapshot.ref + "";
+							table = table.split("/");
+							
+							table = table[table.length - 1];
+							
+							if(snapshot.exists()){
+								//var content = '';
+								snapshot.forEach(function(data){
+									//console.log(data.key.key)
+									var dv1 = data.val();
+									valid = false
+									pkey = null
+									
+									content1 ='<tr>';
+									
+									for(var propName1 in dv1) {
+									
+										if(propName1 == "PKcollated") {
+						
+											continue
+										}
+						
+										cols = dv1[propName1]
+										content1 += '<td  class=\"'+propName1+'\"  data-table=\"' + table + '\" >' + JSON.stringify(cols) + '</td>';
+									}
+									content1 += '</tr>';
+									
+									var getOlderInformation = document.getElementById("records").innerHTML;
+									document.getElementById("records").innerHTML = getOlderInformation + content1;
+								
+								});
+							}
+						});		
+					}			
+									
+					
+				}
+
+            });
+			
+			fkey(curdb, "fkrelation")
+			fkey(curdb, "pkrelation")
+        }
+    });
+	
+	}
+
+	function loadtable(db) {
+  
+  
+  document.getElementById("records").innerHTML = '';
+  
+  document.getElementById("dbselection").innerHTML = db;
+  db = db.toLowerCase()
+
+ 
+}
+
+
+
+
+function fkey(curdb, fprec){ // highlight foreign key
+	
+	database.ref().child(curdb).child(fprec).once('value', function(snapshot){
+							
+							table = snapshot.ref + "";
+							table = table.split("/");
+							
+							table = table[table.length - 1];
+							
+							if(snapshot.exists()){
+								
+								snapshot.forEach(function(data){ // table
+									var dv1 = data.val(); // fkeys
+									valid = false
+									pkey = null
+									
+									for(var propName in dv1) {
+									
+										var all = document.getElementsByClassName(dv1[propName]);
+										
+
+										for (var i = 0; i < all.length; i++) {
+											//console.log("cahnge lllllllllllllllllll style:")
+											all[i].style.color = "blue";
+											all[i].style.textDecoration = "underline";
+											all[i].addEventListener("click", searchkeyword);
+										}
+									}
+								
+								
+								});
+							}
+						});
+						
+}
+      document.addEventListener('DOMContentLoaded', function() {
+        
+        try {
+          let app = firebase.app();
+          let features = ['auth', 'database', 'messaging', 'storage'].filter(feature => typeof app[feature] === 'function');
+		  
+        } catch (e) {
+          console.error(e);
+		  
+        }
+      });
+	  
+	  
+	  /////////////////////////////////////////////////////////
+	  //Connect to database
+	// Your web app's Firebase configuration
+  var firebaseConfig = {
+    apiKey: "AIzaSyBIxSpb-nCQ9KtnIvwOpy5-Ltouf7-DH5I",
+    authDomain: "project1-23012.firebaseapp.com",
+    databaseURL: "https://project1-23012.firebaseio.com",
+    projectId: "project1-23012",
+    storageBucket: "project1-23012.appspot.com",
+    messagingSenderId: "811549968067",
+    appId: "1:811549968067:web:9b1e7f91bf7dd8e55c8476",
+    measurementId: "G-BGW96Z3FS5"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  
+	//var database = firebase.database().ref().child("city");
+	  var database = firebase.database();
+    
+    </script>
+  </body>
+</html>
